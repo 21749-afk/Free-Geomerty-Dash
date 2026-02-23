@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mini Geometry Dash</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #333; color: #fff; font-family: Arial, sans-serif; overflow: hidden; }
+        #gameCanvas { background-color: #1e272e; border: 2px solid #d2dae2; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Player object
+        const player = {
+            x: 50, y: 300, width: 40, height: 40, color: "#ff3f34",
+            dy: 0, gravity: 0.8, jumpStrength: -15, onGround: false
+        };
+
+        const obstacles = [];
+        let score = 0;
+        let gameover = false;
+
+        function createObstacle() {
+            if (Math.random() < 0.02) {
+                obstacles.push({
+                    x: canvas.width, y: canvas.height - 60,
+                    width: 30, height: 50, color: "#0fbcf9"
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Draw Obstacles
+            obstacles.forEach(obs => {
+                ctx.fillStyle = obs.color;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            });
+
+            // Score
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+        }
+
+        function update() {
+            if (gameover) return;
+
+            // Gravity
+            player.dy += player.gravity;
+            player.y += player.dy;
+
+            // Ground Collision
+            if (player.y + player.height > canvas.height - 20) {
+                player.y = canvas.height - 20 - player.height;
+                player.dy = 0;
+                player.onGround = true;
+            } else {
+                player.onGround = false;
+            }
+
+            // Obstacle Movement & Collision
+            obstacles.forEach((obs, index) => {
+                obs.x -= 5;
+                if (obs.x + obs.width < 0) obstacles.splice(index, 1);
+
+                if (player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y) {
+                    gameover = true;
+                    alert("Game Over! Score: " + score);
+                    location.reload();
+                }
+            });
+
+            createObstacle();
+            score++;
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        // Jump Input
+        window.addEventListener("keydown", (e) => {
+            if ((e.code === "Space" || e.code === "ArrowUp") && player.onGround) {
+                player.dy = player.jumpStrength;
+                player.onGround = false;
+            }
+        });
+
+        update();
+    </script>
+</body>
+</html>
